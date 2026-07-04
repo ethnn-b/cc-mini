@@ -1,0 +1,55 @@
+[project]
+name = "cc-mini"
+version = "0.1.0"
+description = "A tiny open-source coding agent: an LLM in a LangGraph loop with nine file/shell/web tools, bounded subagent delegation, and a permission gate, like a miniature Claude Code."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Ethan Kurien" }]
+
+dependencies = [
+    # The agent loop. create_react_agent wires the model-tool-observe cycle.
+    "langgraph",
+    # Message types, the @tool decorator, and the BaseChatModel the FakeToolModel
+    # subclasses. langgraph already pulls this in; it is listed so imports are explicit.
+    "langchain-core",
+    # The default provider: a local, keyless, open-weight model served by Ollama.
+    # It is a base dependency so the default path works after `uv sync` + a running Ollama.
+    "langchain-ollama",
+    # Test runner. The offline suite (FakeToolModel + a temp workspace) needs no key.
+    "pytest",
+]
+
+[project.optional-dependencies]
+# Hosted providers, each behind a lazy import in model.py so the default keyless path
+# needs neither. The loop is provider-agnostic: any LangChain chat model that supports
+# tool calling works. The openai extra also covers OpenAI-compatible local servers
+# (vLLM, LM Studio, llama.cpp) via --base-url, which stay keyless.
+anthropic = ["langchain-anthropic"]
+openai = ["langchain-openai"]
+dev = ["ruff", "mypy"]
+
+[project.scripts]
+cc-mini = "ccmini.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ccmini"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# create_react_agent is deprecated in LangGraph 1.0 (removed in 2.0) in favour of
+# langchain.agents.create_agent. We keep it on purpose (see agent.py); silence just
+# that one warning so the suite output stays clean.
+filterwarnings = [
+    "ignore:create_react_agent has been moved:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

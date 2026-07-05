@@ -10,8 +10,7 @@ to read in one sitting.
 > memory, the CLI (one-shot and REPL, with a startup banner and slash commands), and a
 > keyless demo are all in place, with the whole offline path green in pytest. It runs on
 > local open-weight models by default (no API key), with hosted OpenAI and Anthropic as
-> optional extras. See `CLAUDE.md` for the build plan and `STATUS.md` for the milestone
-> checklist.
+> optional extras.
 
 ## In action
 

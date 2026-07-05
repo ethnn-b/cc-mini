@@ -20,6 +20,28 @@ your code decides whether and how to run it. In cc-mini the loop is LangGraph's
 `create_react_agent` (see `agent.py`), and you can watch it turn by running `scripts/demo.py`,
 which streams each tool call as it happens.
 
+```mermaid
+flowchart TD
+    Task([Task]) --> Model["Model\n(LangGraph react loop)"]
+    Model --> Q{tool call\nin response?}
+    Q -->|Yes| P["Permission gate\ncheck(action, detail)"]
+    Q -->|No| Answer([Final Answer])
+    P -->|Allow| Run["Execute tool\nread / list / search / write / edit / bash / fetch / search / subagent"]
+    P -->|Deny| Denied["&quot;Denied: {reason}&quot;\nreturned as result"]
+    Run --> Result["Tool result\nappended to messages"]
+    Result --> Model
+    Denied --> Model
+
+    style Task fill:#a5d8ff,stroke:#1971c2,color:#000
+    style Answer fill:#b2f2bb,stroke:#2f9e44,color:#000
+    style P fill:#ffd8a8,stroke:#e67700,color:#000
+    style Denied fill:#ffc9c9,stroke:#c92a2a,color:#000
+    style Run fill:#b2f2bb,stroke:#2f9e44,color:#000
+    style Result fill:#a5d8ff,stroke:#1971c2,color:#000
+```
+
+The editable source for this diagram is at `docs/diagrams/agent-loop.excalidraw`.
+
 The name "react" is from the ReAct pattern (reason, then act): the model interleaves thinking
 with tool calls instead of trying to answer in one shot.
 
@@ -103,3 +125,58 @@ unchanged, and tool calling is the one capability the loop actually requires. Th
 same seam is what makes the tests fast and free: `FakeToolModel` is a stand-in that returns a
 scripted list of replies, so a full pass through the loop runs with no key and no network. You
 script the model's side of the conversation and assert on what the tools did.
+
+## Module map
+
+```mermaid
+graph TB
+    User([User]) --> CLI
+
+    subgraph CLI["CLI — cli.py + banner.py"]
+        cli["cli.py\none-shot + REPL"]
+        banner["banner.py\nstartup display"]
+    end
+
+    subgraph Agent["Agent — agent.py"]
+        loop["LangGraph create_react_agent\n+ run_subagent"]
+    end
+
+    subgraph Model_["model.py"]
+        m["provider abstraction\nOllama / OpenAI / Anthropic / FakeToolModel"]
+    end
+
+    subgraph Tools["Tools"]
+        t1["tools.py\nread/list/search/write/edit/bash"]
+        t2["web.py\nfetch + search"]
+        t3["sandbox.py\nOS confinement for bash"]
+    end
+
+    subgraph Safety["Safety"]
+        ws["workspace.py\npath sandbox"]
+        perm["permissions.py\napproval gate"]
+    end
+
+    subgraph State["State"]
+        cfg["config.py"]
+        mem["memory.py"]
+        sess["session.py"]
+    end
+
+    CLI --> Agent
+    Agent --> Model_
+    Agent --> Tools
+    t1 --> ws
+    t1 --> perm
+    t2 --> perm
+    Agent --> State
+    CLI --> State
+
+    style CLI fill:#dbe9f7,stroke:#1971c2
+    style Agent fill:#d3f0db,stroke:#2f9e44
+    style Model_ fill:#dbe9f7,stroke:#1971c2
+    style Tools fill:#fde8cc,stroke:#e67700
+    style Safety fill:#fcd9d9,stroke:#c92a2a
+    style State fill:#e8dff5,stroke:#7048e8
+```
+
+The editable source for this diagram is at `docs/diagrams/architecture.excalidraw`.

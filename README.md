@@ -13,6 +13,49 @@ to read in one sitting.
 > optional extras. See `CLAUDE.md` for the build plan and `STATUS.md` for the milestone
 > checklist.
 
+## In action
+
+**Write a file and run it.** The agent writes `fibonacci.py` and runs it in one turn. Each
+mutating step pauses at the permission gate: you see exactly what it wants to do before it
+happens.
+
+![Fibonacci demo: write_file + run_bash with permission prompts](docs/screenshots/fibonacci.png)
+
+---
+
+**Read a file and edit it.** The agent reads `notes.txt`, finds the existing line, and appends
+a new one with `edit_file`. The gate asks before the write; the final file contents are shown
+in the summary.
+
+![Read and edit notes.txt](docs/screenshots/read-edit.png)
+
+---
+
+**Multi-step: module, test, run.** Given one task, the agent writes `greet.py`, writes
+`test_greet.py`, and runs pytest, asking for approval at each write and command.
+
+![Multi-step: permission gate at each write and run](docs/screenshots/multistep-greet.png)
+
+![Multi-step: pytest passes, agent summarises what it did](docs/screenshots/multistep-greet-result.png)
+
+---
+
+**Path sandbox.** Ask the agent to write outside the workspace and it hits the sandbox before
+the permission gate is even reached. The error goes back to the model as a string; nothing
+touches the disk.
+
+![Path escape blocked by workspace sandbox](docs/screenshots/path-escape.png)
+
+---
+
+**Interactive REPL and slash commands.** Start without a task for a multi-turn session. `/help`
+lists the available commands; `/memory` and `/session` let you inspect what the agent has
+distilled from the conversation so far.
+
+![REPL /help output](docs/screenshots/repl-help.png)
+
+---
+
 ## The idea
 
 An agent is not a clever prompt, it is a loop. The model proposes a tool call, the harness
